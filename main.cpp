@@ -1,7 +1,4 @@
-#include <iostream>
-#include <cstdio>
 #include <cstdint>
-#include <cstdlib>
 #include <string>
 #include <chrono>
 #include <thread>
@@ -9,102 +6,74 @@
 #include <functional>
 #include "source.hpp"
 
+extern "C" {
+#include <ncurses.h>
+}
+
 namespace chron = std::chrono;
 using namespace std::string_literals;
 using namespace std::chrono_literals;
 
 namespace
 {
-    inline void moveCursor(int x, int y)
-    {
-        std::printf("\033[%d;%dH", y, x);
-        std::fflush(stdout);
-    }
-
-    inline void clearScreen()
-    {
-        std::printf("\e[1;1H\e[2J");
-    }
-
-    inline void printStr(const std::string &str)
-    {
-        std::printf("%s", str.c_str());
-        std::fflush(stdout);
-    }
-
-    inline void moveCursorUp(int x)
-    {
-        std::printf("\033[%dA", x);
-        std::fflush(stdout);
-    }
-
-    inline void moveCursorDown(int x)
-    {
-        std::printf("\033[%dB", x);
-        std::fflush(stdout);
-    }
-
-    inline void moveCursorRight(int x)
-    {
-        std::printf("\033[%dC", x);
-        std::fflush(stdout);
-    }
-    
-    inline void moveCursorLeft(int x)
-    {
-        std::printf("\033[%dD", x);
-        std::fflush(stdout);
-    }
-
-    inline void eraseAtCursor(int n = 0)
-    {
-        std::printf("\033[%dK", n);
-    }
-
-    inline void initCursor()
-    {
-        // Set cursor to block.
-        std::printf("\033[?2c");
-        // Set cursor color to dark green.
-        std::printf("\e]P287AF5F");
-        std::fflush(stdout);
-    }
-
+    // Maximum x and y values.
+    int maxX = 0;
+    int maxY = 0;
 
     struct textEffect
     {
         chron::milliseconds wait;
-        std::string text;
-        std::function<void()> preRunHook;
-        std::function<void()> postRunHook;
+        // If x or y are 0, ignore them.
         int x = 0;
         int y = 0;
-    };
+        // If dx is true then the x value is relative to the current
+        // position. Same for y.
+        bool dx = false;
+        bool dy = false;
+        std::string text;
+        std::function<void()> postRunHook;
 
-    void doTextEffect(const textEffect &effect)
-    {
-        if(effect.preRunHook)
-            effect.preRunHook();
-        std::this_thread::sleep_for(wait);
-        if(effect.x >= 0 && effect.y >= 0)
-            moveCursor(effect.x, effect.y);
-        if(effect.text)
-            printStr(effect.text);
-        if(effect.postRunHook)
-            effect.postRunHook();
-    }
+        void doTextEffect() const
+        {
+            // Get the current x and y position.
+            int curX = 0;
+            int curY = 0;
+            getyx(stdscr, curY, curX);
+            // Sleep the thread.
+            std::this_thread::sleep_for(wait);
+            // Move the cursor.
+            move(y + (dy ? curY : 0), x + (dx ? curX : 0));
+            refresh();
+            // Print the string if there is one and run the post run
+            // hook.
+            if(!text.empty())
+                printw("%s", text.c_str());
+            if(postRunHook)
+                postRunHook();
+        }
+    };
 }
 
 int main(int argc, const char * const argv[])
 {
-    constexpr std::array textEffects = {
-        {}
+    const static std::array textEffects = {
+        textEffect{ 1000ms, 1, 0, true, true },
+        textEffect{ 1000ms, 1, 0, true, true },
+        textEffect{ 1000ms, 1, 0, true, true },
     };
-    clearScreen();
+    // Init ncurses.
+    initscr();
+    raw();
+    noecho();
+    // Get the maximum x and y and decrease the maximum y and x values
+    // to 0-count them.
+    getmaxyx(stdscr, maxY, maxX);
+    maxY--;
+    maxX--;
 
-    moveCursor(20, 5);
+    for(const auto &effect : textEffects)
+        effect.doTextEffect();
 
-    std::fwrite(main_cpp, main_cpp_len, 1, stdout);
-    printStr("\nLol\n");
+    endwin();
     return 0;
 }
