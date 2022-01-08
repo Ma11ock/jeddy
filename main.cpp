@@ -3,6 +3,15 @@
 #include <cstdint>
 #include <cstdlib>
 #include <string>
+#include <chrono>
+#include <thread>
+#include <array>
+#include <functional>
+#include "source.hpp"
+
+namespace chron = std::chrono;
+using namespace std::string_literals;
+using namespace std::chrono_literals;
 
 namespace
 {
@@ -46,13 +55,56 @@ namespace
         std::printf("\033[%dD", x);
         std::fflush(stdout);
     }
+
+    inline void eraseAtCursor(int n = 0)
+    {
+        std::printf("\033[%dK", n);
+    }
+
+    inline void initCursor()
+    {
+        // Set cursor to block.
+        std::printf("\033[?2c");
+        // Set cursor color to dark green.
+        std::printf("\e]P287AF5F");
+        std::fflush(stdout);
+    }
+
+
+    struct textEffect
+    {
+        chron::milliseconds wait;
+        std::string text;
+        std::function<void()> preRunHook;
+        std::function<void()> postRunHook;
+        int x = 0;
+        int y = 0;
+    };
+
+    void doTextEffect(const textEffect &effect)
+    {
+        if(effect.preRunHook)
+            effect.preRunHook();
+        std::this_thread::sleep_for(wait);
+        if(effect.x >= 0 && effect.y >= 0)
+            moveCursor(effect.x, effect.y);
+        if(effect.text)
+            printStr(effect.text);
+        if(effect.postRunHook)
+            effect.postRunHook();
+    }
 }
 
 int main(int argc, const char * const argv[])
 {
+    constexpr std::array textEffects = {
+        {}
+    };
     clearScreen();
+
     moveCursor(20, 5);
-    printStr("Lol");
-    sleep(5);
+
+    std::fwrite(main_cpp, main_cpp_len, 1, stdout);
+    printStr("\nLol\n");
     return 0;
 }
