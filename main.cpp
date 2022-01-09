@@ -49,7 +49,7 @@ namespace
         // position. Same for y.
         bool dx = false;
         bool dy = false;
-        std::string text;
+        std::string_view text;
         // Transformation functions. If xTransformFunc is defined it
         // will be ran for each character in the string --- it is used
         // to change the x value of the cursor. Same goes for y.
@@ -99,6 +99,11 @@ namespace
                     // curX + i is greater than the width.
                     mvaddch(curY, curX + i, text[i]);
                     refresh();
+                    if(text[i] == '\n')
+                    {
+                        newCursorY = std::min(maxY, newCursorY + 1);
+                        newCursorX = -i - 1;
+                    }
                 }
             }
             if(postRunHook)
@@ -141,7 +146,7 @@ int main(int argc, const char * const argv[])
         }
     }
 
-
+    // Text effect array.
     const static std::array textEffects = {
         textEffect{ 2000ms, 1, 0, true, true },
         textEffect{ 2000ms, 2, 0, true, true },
@@ -162,7 +167,19 @@ int main(int argc, const char * const argv[])
             }
         },
         textEffect{ 2000ms, 0, 2, false, true, "But how right you were" },
-
+        textEffect{ 2000ms, 1, 0, true, true },
+        textEffect{ 2000ms, 1, 1, true, true },
+        textEffect{ 2000ms, 1, 1, true, true },
+        textEffect{ 100ms, 0, 0, true, true },
+        textEffect{ 2000ms, 1, 1, true, true, "", nullptr, nullptr,
+            []()
+            {
+                clear();
+                refresh();
+                move(0, 0);
+            }
+        },
+        textEffect{ 0ms, 1, 1, true, true },
     };
     // Init ncurses.
     initscr();
@@ -188,6 +205,12 @@ int main(int argc, const char * const argv[])
         if(getch() != ERR)
             while(getch() == ERR) std::this_thread::sleep_for(50ms);
     }
+
+    // Draw the source code.
+    char *sourceTxt = reinterpret_cast<char*>(main_cpp);
+    (textEffect{ 50ms, 0, 0, true, true,
+         std::string_view(sourceTxt, main_cpp_len),
+         nullptr, nullptr, nullptr, 25ms } ).doTextEffect();
 
     endwin();
     return 0;
