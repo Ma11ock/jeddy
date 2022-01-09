@@ -72,6 +72,12 @@ namespace
             newCursorY = dy ? (newCursorY + y) : y;
             // Sleep the thread.
             std::this_thread::sleep_for(wait);
+            // Scroll the cursor if necessary.
+            if(newCursorY > maxY)
+            {
+                scrl(newCursorY - maxY);
+                newCursorY = maxY; 
+            }
             // Move the newCursorsor.
             move(newCursorY, newCursorX);
             // Print the string if it is defined and run the transform
@@ -89,7 +95,7 @@ namespace
                         curY = yTransformFunc(i, newCursorY);
                     // Might sometimes cause text to go off screen if
                     // curX + i is greater than the width.
-                    mvprintw(curY, curX + i, "%c", text[i]);
+                    mvaddch(curY, curX + i, text[i]);
                     refresh();
                 }
             }
@@ -102,16 +108,16 @@ namespace
 
 int main(int argc, const char * const argv[])
 {
-    std::size_t startTextEffect = 0;
+    std::size_t startTextEffect = 8;
     const static std::array textEffects = {
         textEffect{ 2000ms, 1, 0, true, true },
         textEffect{ 2000ms, 2, 0, true, true },
         textEffect{ 2000ms, 2, 0, true, true },
         textEffect{ 2000ms, 2, 0, true, true },
         textEffect{ 2000ms, 1, 1, true, true },
-        textEffect{ 100ms, 0, 0, false, true, "You'd said I'd wake up\\"},
-        textEffect{ 100ms, 0, 1, false, true, "Dead drunk\\"},
-        textEffect{ 100ms, 0, 1, false, true, "Alone in the park"},
+        textEffect{ 100ms, 0, 0, false, true, "You'd said I'd wake up\\" },
+        textEffect{ 100ms, 0, 1, false, true, "Dead drunk\\" },
+        textEffect{ 100ms, 0, 1, false, true, "Alone in the park" },
         textEffect{ 2000ms, 1, 0, true, true },
         textEffect{ 2000ms, 1, 0, true, true },
         textEffect{ 100ms, 1, 1, false, true, "I called you a LIAR",
@@ -122,6 +128,7 @@ int main(int argc, const char * const argv[])
                 return curY + static_cast<int>(index);
             }
         },
+        textEffect{ 2000ms, 0, 2, false, true, "But how right you were" },
 
     };
     // Init ncurses.
@@ -148,6 +155,8 @@ int main(int argc, const char * const argv[])
         if(getch() != ERR)
             while(getch() == ERR) std::this_thread::sleep_for(50ms);
     }
+
+    
 
     endwin();
     return 0;
