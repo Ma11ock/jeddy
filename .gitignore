@@ -2,24 +2,6 @@
 # Created by https://www.toptal.com/developers/gitignore/api/cmake,emacs,vim
 # Edit at https://www.toptal.com/developers/gitignore?templates=cmake,emacs,vim
 
-### CMake ###
-CMakeLists.txt.user
-CMakeCache.txt
-CMakeFiles
-CMakeScripts
-Testing
-Makefile
-cmake_install.cmake
-install_manifest.txt
-compile_commands.json
-CTestTestfile.cmake
-_deps
-CMakeUserPresets.json
-
-### CMake Patch ###
-# External projects
-*-prefix/
-
 ### Emacs ###
 # -*- mode: gitignore; -*-
 *~
@@ -97,3 +79,7 @@ tags
 bin/
 
 res/
+
+*.o
+
+source.cpp
