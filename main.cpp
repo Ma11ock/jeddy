@@ -4,6 +4,8 @@
 #include <chrono>
 #include <thread>
 #include <array>
+#include <string_view>
+#include <charconv>
 #include <functional>
 #include "source.hpp"
 
@@ -108,7 +110,38 @@ namespace
 
 int main(int argc, const char * const argv[])
 {
-    std::size_t startTextEffect = 8;
+    // Starting text effects (for debugging).
+    std::size_t startTextEffect = 0;
+
+    // Parse cmd args.
+    std::vector<std::string_view> args(argv + 1, argv + argc);
+    auto checkIt = [&](const std::vector<std::string_view>::iterator &it) -> bool
+    {
+        return it < args.end();
+    };
+    for(auto it = args.begin(); it < args.end(); it++)
+    {
+        std::string_view str = *it;
+        if(str == "-n")
+        {
+            if(!checkIt(++it))
+            {
+                std::cerr << "Fatal error: no flag for -n.\n";
+                return 1;
+            }
+            str = *it;
+            if(auto result = std::from_chars(str.begin(),
+                                             str.begin() + str.size(),
+                                             startTextEffect);
+               result.ec != std::errc())
+            {
+                std::cerr << "Fatal error for flag -n: invalid argument.\n";
+                return 1;
+            }
+        }
+    }
+
+
     const static std::array textEffects = {
         textEffect{ 2000ms, 1, 0, true, true },
         textEffect{ 2000ms, 2, 0, true, true },
@@ -120,7 +153,7 @@ int main(int argc, const char * const argv[])
         textEffect{ 100ms, 0, 1, false, true, "Alone in the park" },
         textEffect{ 2000ms, 1, 0, true, true },
         textEffect{ 2000ms, 1, 0, true, true },
-        textEffect{ 100ms, 1, 1, false, true, "I called you a LIAR",
+        textEffect{ 100ms, 1, 1, true, true, "I called you a LIAR",
             [](std::size_t index, int curX) -> int {
                 return curX + static_cast<int>(index);
             },
@@ -155,8 +188,6 @@ int main(int argc, const char * const argv[])
         if(getch() != ERR)
             while(getch() == ERR) std::this_thread::sleep_for(50ms);
     }
-
-    
 
     endwin();
     return 0;
