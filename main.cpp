@@ -48,36 +48,50 @@ namespace
         bool dx = false;
         bool dy = false;
         std::string text;
+        // Transformation functions. If xTransformFunc is defined it
+        // will be ran for each character in the string --- it is used
+        // to change the x value of the cursor. Same goes for y.
+        // They return the new x or y value, and take in the current
+        // index of the character in `text', and the current x or y
+        // coordinate.
+        std::function<int(std::size_t, int)> xTransformFunc;
+        std::function<int(std::size_t, int)> yTransformFunc;
+        // If defined, this function will run after everything else has
+        // been done.
+        std::function<void()> postRunHook;
         // Wait between printing characters.
         chron::milliseconds outputWait = 75ms;
-        std::function<void()> postRunHook;
 
         void doTextEffect() const
         {
-            // Get the current x and y position.
-            int curX = 0;
-            int curY = 0;
-            getyx(stdscr, curY, curX);
+            // Get the new x and y position.
+            int newCursorX = 0;
+            int newCursorY = 0;
+            getyx(stdscr, newCursorY, newCursorX);
+            newCursorX = dx ? (newCursorX + x) : x;
+            newCursorY = dy ? (newCursorY + y) : y;
             // Sleep the thread.
             std::this_thread::sleep_for(wait);
-            // Move the cursor.
-            move(y + (dy ? curY : 0), x + (dx ? curX : 0));
-            refresh();
-            // Print the string if there is one and run the post run
-            // hook.
+            // Move the newCursorsor.
+            move(newCursorY, newCursorX);
+            // Print the string if it is defined and run the transform
+            // functions.
             if(!text.empty())
             {
-                if(outputWait >= 0ms)
+                for(std::size_t i = 0; i < text.size(); i++)
                 {
-                    for(auto c : text)
-                    {
-                        std::this_thread::sleep_for(outputWait);
-                        printw("%c", c);
-                        refresh();
-                    }
+                    int curX = newCursorX;
+                    int curY = newCursorY;
+                    std::this_thread::sleep_for(outputWait);
+                    if(xTransformFunc)
+                        curX = xTransformFunc(i, newCursorX);
+                    if(yTransformFunc)
+                        curY = yTransformFunc(i, newCursorY);
+                    // Might sometimes cause text to go off screen if
+                    // curX + i is greater than the width.
+                    mvprintw(curY, curX + i, "%c", text[i]);
+                    refresh();
                 }
-                else
-                    printw("%s", text.c_str());
             }
             if(postRunHook)
                 postRunHook();
@@ -88,15 +102,35 @@ namespace
 
 int main(int argc, const char * const argv[])
 {
+    std::size_t startTextEffect = 0;
     const static std::array textEffects = {
-        textEffect{ 2000ms, 1, 0, true, true, "Sneed"s, },
+        textEffect{ 2000ms, 1, 0, true, true },
+        textEffect{ 2000ms, 2, 0, true, true },
+        textEffect{ 2000ms, 2, 0, true, true },
+        textEffect{ 2000ms, 2, 0, true, true },
+        textEffect{ 2000ms, 1, 1, true, true },
+        textEffect{ 100ms, 0, 0, false, true, "You'd said I'd wake up\\"},
+        textEffect{ 100ms, 0, 1, false, true, "Dead drunk\\"},
+        textEffect{ 100ms, 0, 1, false, true, "Alone in the park"},
         textEffect{ 2000ms, 1, 0, true, true },
         textEffect{ 2000ms, 1, 0, true, true },
+        textEffect{ 100ms, 1, 1, false, true, "I called you a LIAR",
+            [](std::size_t index, int curX) -> int {
+                return curX + static_cast<int>(index);
+            },
+            [](std::size_t index, int curY) -> int {
+                return curY + static_cast<int>(index);
+            }
+        },
+
     };
     // Init ncurses.
     initscr();
     raw();
+    cbreak();
     noecho();
+    nodelay(stdscr, TRUE);
+    scrollok(stdscr, TRUE);
     // Init the cursor (set to green and blinking).
     //std::cout << "\e]PFFFFFFFF " << std::flush;
     // Get the maximum x and y and decrease the maximum y and x values
@@ -106,8 +140,14 @@ int main(int argc, const char * const argv[])
     maxX--;
 
     refresh();
-    for(const auto &effect : textEffects)
-        effect.doTextEffect();
+    for(auto it = textEffects.begin() + startTextEffect;
+        it < textEffects.end(); it++)
+    {
+        it->doTextEffect();
+        // If the keyboard was hit, pause playing until it is hit again.
+        if(getch() != ERR)
+            while(getch() == ERR) std::this_thread::sleep_for(50ms);
+    }
 
     endwin();
     return 0;
