@@ -23,6 +23,22 @@ namespace
     int maxX = 0;
     int maxY = 0;
 
+    // TODO maybe system where there are default transformations,
+    // instead of the draw loop incrementing X manually.
+
+    // Text transformation functions that will be used multiple times.
+
+    // 
+    int transformVerticalX(std::size_t index, int curX)
+    {
+        return curX - static_cast<int>(index);
+    }
+
+    int transformVerticalY(std::size_t index, int curY)
+    {
+        return curY + static_cast<int>(index);
+    }
+
     inline int getX()
     {
         int x = 0;
@@ -179,7 +195,45 @@ int main(int argc, const char * const argv[])
                 move(0, 0);
             }
         },
-        textEffect{ 0ms, 1, 1, true, true },
+        textEffect{ 2000ms, 1, 1, true, true, "Air Conditioned" },
+        textEffect{ 0ms, 0, 0, true, true,    "dnaL VT         ",
+            [](std::size_t index, int curX) -> int {
+                return curX - (static_cast<int>(index) * 2);
+            }
+        },
+        textEffect{ 0ms, 0, 0, true, true, "Twenty Grand" },
+        textEffect{ 0ms, 1, 1, true, true, "W a l k", transformVerticalX,
+            transformVerticalY },
+        textEffect{ 0ms, 1, 1, true, true, "T o" },
+        textEffect{ 0ms, 1, 1, true, true, "T h e" , transformVerticalX,
+            transformVerticalY },
+        textEffect{ 0ms, 0, 1, true, true, "$$$$$$$$$$$$$$$$$$$$",
+            [](std::size_t index, int curX) ->int {
+                index++;
+                if(index <= 5)
+                    return curX - static_cast<int>(index - 1);
+                
+            },
+            [](std::size_t index, int curY) -> int {
+                index++;
+                if(index <= 5 || index >= (22 - 5))
+                {
+                    if(index % 5 == 0)
+                        return curY + 4;
+                    else if(index % 4 == 0)
+                        return curY + 3;
+                    else if(index % 3 == 0)
+                        return curY + 2;
+                    else if(index % 2 == 0)
+                        return curY + 1;
+                    return curY;
+                }
+                if(index % 2 == 0)
+                    return curY;
+                return curY + 4;
+            },
+            nullptr, 16ms
+        },
     };
     // Init ncurses.
     initscr();
