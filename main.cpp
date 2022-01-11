@@ -207,33 +207,22 @@ int main(int argc, const char * const argv[])
         textEffect{ 0ms, 1, 1, true, true, "T o" },
         textEffect{ 0ms, 1, 1, true, true, "T h e" , transformVerticalX,
             transformVerticalY },
-        textEffect{ 0ms, 0, 1, true, true, "$$$$$$$$$$$$$$$$$$$$",
-            [](std::size_t index, int curX) ->int {
-                index++;
-                if(index <= 5)
-                    return curX - static_cast<int>(index - 1);
-                
-            },
-            [](std::size_t index, int curY) -> int {
-                index++;
-                if(index <= 5 || index >= (22 - 5))
-                {
-                    if(index % 5 == 0)
-                        return curY + 4;
-                    else if(index % 4 == 0)
-                        return curY + 3;
-                    else if(index % 3 == 0)
-                        return curY + 2;
-                    else if(index % 2 == 0)
-                        return curY + 1;
-                    return curY;
-                }
-                if(index % 2 == 0)
-                    return curY;
-                return curY + 4;
-            },
-            nullptr, 16ms
-        },
+        textEffect{ 0ms, 0, 1, true, true, "$$$$$",
+            transformVerticalX, transformVerticalY, nullptr, 5ms },
+        textEffect{ 0ms, 0, -4, true, true, "$   $",
+            transformVerticalX, transformVerticalY, nullptr, 5ms },
+        textEffect{ 0ms, 0, -4, true, true, "$ B $",
+            transformVerticalX, transformVerticalY, nullptr, 5ms },
+        textEffect{ 0ms, 0, -4, true, true, "$ A $",
+            transformVerticalX, transformVerticalY, nullptr, 5ms },
+        textEffect{ 0ms, 0, -4, true, true, "$ N $",
+            transformVerticalX, transformVerticalY, nullptr, 5ms },
+        textEffect{ 0ms, 0, -4, true, true, "$ K $",
+            transformVerticalX, transformVerticalY, nullptr, 5ms },
+        textEffect{ 0ms, 0, -4, true, true, "$   $",
+            transformVerticalX, transformVerticalY, nullptr, 5ms },
+        textEffect{ 0ms, 0, -4, true, true, "$$$$$",
+            transformVerticalX, transformVerticalY, nullptr, 5ms },
     };
     // Init ncurses.
     initscr();
