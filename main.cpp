@@ -7,6 +7,7 @@
 #include <string_view>
 #include <charconv>
 #include <functional>
+#include <cmath>
 #include "source.hpp"
 
 extern "C" {
@@ -19,6 +20,7 @@ using namespace std::chrono_literals;
 
 namespace
 {
+    constexpr double PI = 3.14159;
     // Maximum x and y values.
     int maxX = 0;
     int maxY = 0;
@@ -37,6 +39,18 @@ namespace
     int transformVerticalY(std::size_t index, int curY)
     {
         return curY + static_cast<int>(index);
+    }
+
+    int defaultXTransform(std::size_t index, int curX)
+    {
+        return curX + static_cast<int>(index);
+    }
+
+    void clearScreen()
+    {
+        clear();
+        refresh();
+        move(0, 0);
     }
 
     inline int getX()
@@ -72,7 +86,7 @@ namespace
         // They return the new x or y value, and take in the current
         // index of the character in `text', and the current x or y
         // coordinate.
-        std::function<int(std::size_t, int)> xTransformFunc;
+        std::function<int(std::size_t, int)> xTransformFunc = defaultXTransform;
         std::function<int(std::size_t, int)> yTransformFunc;
         // If defined, this function will run after everything else has
         // been done.
@@ -113,7 +127,7 @@ namespace
                         curY = yTransformFunc(i, newCursorY);
                     // Might sometimes cause text to go off screen if
                     // curX + i is greater than the width.
-                    mvaddch(curY, curX + i, text[i]);
+                    mvaddch(curY, curX, text[i]);
                     refresh();
                     if(text[i] == '\n')
                     {
@@ -187,13 +201,8 @@ int main(int argc, const char * const argv[])
         textEffect{ 2000ms, 1, 1, true, true },
         textEffect{ 2000ms, 1, 1, true, true },
         textEffect{ 100ms, 0, 0, true, true },
-        textEffect{ 2000ms, 1, 1, true, true, "", nullptr, nullptr,
-            []()
-            {
-                clear();
-                refresh();
-                move(0, 0);
-            }
+        textEffect{ 2000ms, 1, 1, true, true, "", defaultXTransform, nullptr,
+            clearScreen
         },
         textEffect{ 2000ms, 1, 1, true, true, "Air Conditioned" },
         textEffect{ 0ms, 0, 0, true, true,    "dnaL VT         ",
@@ -223,6 +232,39 @@ int main(int argc, const char * const argv[])
             transformVerticalX, transformVerticalY, nullptr, 5ms },
         textEffect{ 0ms, 0, -4, true, true, "$$$$$",
             transformVerticalX, transformVerticalY, nullptr, 5ms },
+        textEffect{ 0ms, 0, 1, false, true, "With" },
+        textEffect{ 0ms, 0, 0, true, true, "      ", defaultXTransform,
+            [](std::size_t index, int curY) -> int
+            {
+                if(index < 3)
+                    return curY + static_cast<int>(index);
+                return curY - (5 - static_cast<int>(index));
+            },
+        },
+        textEffect{ 0ms, 0, 0, true, true, "From the night before" },
+        textEffect{ 0ms, 0, 1, false, true, "Staring at the TI" },
+        textEffect{ 0ms, -2, 1, true, true, "KI floor" },
+        textEffect{ 2000ms, -2, 1, true, true, "", nullptr, nullptr,
+            clearScreen},
+        textEffect{ 0ms, 0, 0, false, false,
+            "highschoolweddingringkeysareunderthemats",
+            [](std::size_t index, int curX) -> int
+            {
+                // X = rcos(t)
+                constexpr double r = 14.0;
+                double t = PI + (0.15 * static_cast<double>(index));
+                return static_cast<int>(20.0 + 
+                                        (r * std::cos(t)));
+            },
+            [](std::size_t index, int curY) -> int
+            {
+                // Y = rsin(t)
+                constexpr double r = 11.0;
+                double t = PI + (0.15 * static_cast<double>(index));
+                return static_cast<int>(12.0 +
+                                        (r * std::sin(t)));
+            },
+        },
     };
     // Init ncurses.
     initscr();
@@ -253,7 +295,7 @@ int main(int argc, const char * const argv[])
     char *sourceTxt = reinterpret_cast<char*>(main_cpp);
     (textEffect{ 50ms, 0, 0, true, true,
          std::string_view(sourceTxt, main_cpp_len),
-         nullptr, nullptr, nullptr, 25ms } ).doTextEffect();
+         defaultXTransform, nullptr, nullptr, 25ms } ).doTextEffect();
 
     endwin();
     return 0;
