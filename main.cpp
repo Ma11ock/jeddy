@@ -28,6 +28,11 @@ namespace
     // TODO maybe system where there are default transformations,
     // instead of the draw loop incrementing X manually.
 
+    int transformBackX(std::size_t index, int curX)
+    {
+        return curX - static_cast<int>(index);
+    }
+
     // Text transformation functions that will be used multiple times.
 
     // 
@@ -207,10 +212,7 @@ int main(int argc, const char * const argv[])
         },
         textEffect{ 2000ms, 1, 1, true, true, "Air Conditioned" },
         textEffect{ 0ms, 0, 0, true, true,    "dnaL VT         ",
-            [](std::size_t index, int curX) -> int {
-                return curX - (static_cast<int>(index) * 2);
-            }
-        },
+            transformBackX, },
         textEffect{ 0ms, 0, 0, true, true, "Twenty Grand" },
         textEffect{ 0ms, 1, 1, true, true, "W a l k", nullptr,
             transformVerticalY },
