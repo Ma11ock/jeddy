@@ -269,37 +269,50 @@ int main(int argc, const char * const argv[])
             },
         },
         textEffect{ 1000ms, 20, 20, false, false, "Of all of the " },
-        textEffect{ 0ms, 0, 0, true, true, "HHHOOUUUUUSSSSEEEEESSS",
+        textEffect{ 0ms, 0, 0, true, true, "HHHOOUUUUUSSSSEEEE ESSS",
             [](std::size_t index, int curX)
             {
                 int i = static_cast<int>(index);
-                if(i <= 2 || i >= 18)
+                if(i <= 2)
                     return curX + i;
                 else if(i <= 4)
                     return curX + 3;
-                else if(i <= 14)
+                else if(i < 14)
                     return curX + i - 3;
-                else if(i <= 19)
-                    return curX + 12;
+                else if(i == 14)
+                    return curX + i - 5;
+                else if(i == 15)
+                    return curX + i - 6;
+                else if(i == 16)
+                    return curX + i - 7;
+                else if(i == 17)
+                    return curX + i - 8;
+                else if(i == 18)
+                    return curX + i - 9;
+                else if(i == 19)
+                    return curX + i - 10;
+                else
+                    return curX + 9 + (i - 19);
                 return curX;
             },
             [](std::size_t index, int curY)
             {
                 int i = static_cast<int>(index);
-                if(i <= 2 || i >= 18)
+                if(i <= 2 || i > 18)
                     return curY;
                 else if(i <= 9)
                     return curY + -(i - 2);
                 else if(i <= 13)
                     return curY + (i - 3) - 13;
-                else if(i <= 16)
+                else if(i <= 15)
+                    return curY + -(i - 9);
+                else if(i <= 19)
                     return curY + -(i - 15);
-                else if(i <= 18)
-                    return curY + -(i - 13);
+
                 return curY;
             },
         },
-        textEffect{ 0ms, 0, 0, true, true, "here" },
+        textEffect{ 0ms, 0, 0, true, true, " here" },
         textEffect{ 1000ms, 0, 2, false, true, "But not the motels" },
         
     };
