@@ -12,5 +12,8 @@ source.o: main.cpp
 main.o: main.cpp
 	$(CPP) $(CPPFLAGS) $< -o $@
 
+run: all
+	./jeddy
+
 clean:
 	rm source.cpp *.o

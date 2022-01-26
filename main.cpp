@@ -86,7 +86,8 @@ namespace
         // They return the new x or y value, and take in the current
         // index of the character in `text', and the current x or y
         // coordinate.
-        std::function<int(std::size_t, int)> xTransformFunc = defaultXTransform;
+        std::function<int(std::size_t, int)> xTransformFunc =
+            defaultXTransform;
         std::function<int(std::size_t, int)> yTransformFunc;
         // If defined, this function will run after everything else has
         // been done.
@@ -211,27 +212,27 @@ int main(int argc, const char * const argv[])
             }
         },
         textEffect{ 0ms, 0, 0, true, true, "Twenty Grand" },
-        textEffect{ 0ms, 1, 1, true, true, "W a l k", transformVerticalX,
+        textEffect{ 0ms, 1, 1, true, true, "W a l k", nullptr,
             transformVerticalY },
         textEffect{ 0ms, 1, 1, true, true, "T o" },
-        textEffect{ 0ms, 1, 1, true, true, "T h e" , transformVerticalX,
+        textEffect{ 0ms, 1, 1, true, true, "T h e" , nullptr,
             transformVerticalY },
         textEffect{ 0ms, 0, 1, true, true, "$$$$$",
-            transformVerticalX, transformVerticalY, nullptr, 5ms },
+            nullptr, transformVerticalY, nullptr, 5ms },
         textEffect{ 0ms, 0, -4, true, true, "$   $",
-            transformVerticalX, transformVerticalY, nullptr, 5ms },
+            nullptr, transformVerticalY, nullptr, 5ms },
         textEffect{ 0ms, 0, -4, true, true, "$ B $",
-            transformVerticalX, transformVerticalY, nullptr, 5ms },
+            nullptr, transformVerticalY, nullptr, 5ms },
         textEffect{ 0ms, 0, -4, true, true, "$ A $",
-            transformVerticalX, transformVerticalY, nullptr, 5ms },
+            nullptr, transformVerticalY, nullptr, 5ms },
         textEffect{ 0ms, 0, -4, true, true, "$ N $",
-            transformVerticalX, transformVerticalY, nullptr, 5ms },
+            nullptr, transformVerticalY, nullptr, 5ms },
         textEffect{ 0ms, 0, -4, true, true, "$ K $",
-            transformVerticalX, transformVerticalY, nullptr, 5ms },
+            nullptr, transformVerticalY, nullptr, 5ms },
         textEffect{ 0ms, 0, -4, true, true, "$   $",
-            transformVerticalX, transformVerticalY, nullptr, 5ms },
+            nullptr, transformVerticalY, nullptr, 5ms },
         textEffect{ 0ms, 0, -4, true, true, "$$$$$",
-            transformVerticalX, transformVerticalY, nullptr, 5ms },
+            nullptr, transformVerticalY, nullptr, 5ms },
         textEffect{ 0ms, 0, 1, false, true, "With" },
         textEffect{ 0ms, 0, 0, true, true, "      ", defaultXTransform,
             [](std::size_t index, int curY) -> int
@@ -265,8 +266,45 @@ int main(int argc, const char * const argv[])
                                         (r * std::sin(t)));
             },
         },
+        textEffect{ 1000ms, 20, 20, false, false, "Of all of the " },
+        textEffect{ 0ms, 0, 0, true, true, "HHHOOUUUUUSSSSEEEEESSS",
+            [](std::size_t index, int curX)
+            {
+                int i = static_cast<int>(index);
+                if(i <= 2 || i >= 18)
+                    return curX + i;
+                else if(i <= 4)
+                    return curX + 3;
+                else if(i <= 14)
+                    return curX + i - 3;
+                else if(i <= 19)
+                    return curX + 12;
+                return curX;
+            },
+            [](std::size_t index, int curY)
+            {
+                int i = static_cast<int>(index);
+                if(i <= 2 || i >= 18)
+                    return curY;
+                else if(i <= 9)
+                    return curY + -(i - 2);
+                else if(i <= 13)
+                    return curY + (i - 3) - 13;
+                else if(i <= 16)
+                    return curY + -(i - 15);
+                else if(i <= 18)
+                    return curY + -(i - 13);
+                return curY;
+            },
+        },
+        textEffect{ 0ms, 0, 0, true, true, "here" },
+        textEffect{ 1000ms, 0, 2, false, true, "But not the motels" },
+        
     };
     // Init ncurses.
+    // This is supposed to make the cursor green, but it just freezes
+    // the program.
+    //std::cout << "\e]PFFFFFFFF " << std::flush;
     initscr();
     raw();
     cbreak();
@@ -274,7 +312,6 @@ int main(int argc, const char * const argv[])
     nodelay(stdscr, TRUE);
     scrollok(stdscr, TRUE);
     // Init the cursor (set to green and blinking).
-    //std::cout << "\e]PFFFFFFFF " << std::flush;
     // Get the maximum x and y and decrease the maximum y and x values
     // to 0-count them.
     getmaxyx(stdscr, maxY, maxX);
@@ -298,5 +335,7 @@ int main(int argc, const char * const argv[])
          defaultXTransform, nullptr, nullptr, 25ms } ).doTextEffect();
 
     endwin();
+
+    std::cout << "\u001b[0m" << std::flush;
     return 0;
 }
